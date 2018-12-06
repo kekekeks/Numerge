@@ -35,6 +35,9 @@ namespace Numerge
         public string Id { get; set; }
         
         [DataMember]
+        public string IncomingIncludeAssetsOverride { get; set; }
+        
+        [DataMember]
         public bool MergeAll { get; set; }
         
         [DataMember]

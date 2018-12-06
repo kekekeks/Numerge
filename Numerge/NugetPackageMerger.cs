@@ -1,7 +1,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
+// ReSharper disable PossibleNullReferenceException
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable InconsistentNaming
+// ReSharper disable CommentTypo
 namespace Numerge
 {
     public static class NugetPackageMerger
@@ -29,7 +34,7 @@ namespace Numerge
                         foreach (var dep in package.Spec.Dependencies
                             .SelectMany(x => x.Value).OfType<BinaryDependency>())
                         {
-                            if (!mergeConfigs.Any(x => x.Id == dep.Id) &&
+                            if (mergeConfigs.All(x => x.Id != dep.Id) &&
                                 (config.Exclude == null || !config.Exclude.Contains(dep.Id)))
                                 mergeConfigs.Add(new PackageMergeConfiguration {Id = dep.Id});
                         }
@@ -46,6 +51,14 @@ namespace Numerge
                             p.ReplaceDeps(mergeConfig.Id, package);
                         packages.Remove(mergeConfig.Id);
                     }
+
+                    if (config.IncomingIncludeAssetsOverride != null)
+                    {
+                        foreach (var d in packages.Values
+                            .SelectMany(p => p.Spec.Dependencies.Values.SelectMany(x => x)))
+                            if (d.Id == package.Spec.Id)
+                                d.ExcludeAssets = config.IncomingIncludeAssetsOverride;
+                    }
                 }
 
                 foreach (var package in packages.Values)
@@ -53,7 +66,6 @@ namespace Numerge
                     logger.Info($"Saving {package.FileName}");
                     package.SaveToDirectory(output);
                 }
-
             }
             catch (MergeAbortedException e)
             {

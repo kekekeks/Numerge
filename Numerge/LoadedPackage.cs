@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -5,6 +6,12 @@ using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 using static Numerge.Constants;
+// ReSharper disable PossibleNullReferenceException
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable InconsistentNaming
+// ReSharper disable CommentTypo
 
 namespace Numerge
 {
@@ -14,7 +21,7 @@ namespace Numerge
         public Dictionary<string, byte[]> BinaryContents { get;  } = new Dictionary<string, byte[]>();
         public LoadedNuspec Spec { get; }
         public ContentTypes ContentTypes { get; }
-        private string _nuspecName;
+        readonly string _nuspecName;
 
         public LoadedPackage(string fileName, byte[] package)
         {
@@ -49,10 +56,10 @@ namespace Numerge
         {
             foreach (var grp in Spec.Dependencies)
             {
-                for (var c=0; c< grp.Value.Count; c++)
+                foreach (var d in grp.Value.ToList())
                 {
-                    if (pkgs.TryGetValue(grp.Value[c].Id, out var bindep))
-                        grp.Value[c] = new BinaryDependency(grp.Value[c], bindep);
+                    if (pkgs.TryGetValue(d.Id, out var bindep))
+                        grp.Value.Replace(d.Id, bindep);
                 }
             }
         }
@@ -122,9 +129,8 @@ namespace Numerge
                 var handledDepFrameworks = new HashSet<string>();
                 foreach (var group in victim.Spec.Dependencies)
                 {
-                    if (!Spec.Dependencies.TryGetValue(group.Key, out var ourGroup))
-                        Spec.Dependencies[group.Key] = ourGroup = new List<IDependency>();
-                    ourGroup.AddRange(group.Value);
+                    Spec.Dependencies.GetOrCreateGroup(group.Key)
+                        .AddRange(group.Value);
                     handledDepFrameworks.Add(group.Key);
                 }
 
@@ -144,9 +150,6 @@ namespace Numerge
                             ourGroup.Value.AddRange(netstandardDeps);
                         }
                     }
-
-                    // Remove merged dep
-                    ourGroup.Value.Where(d => d.Id == victim.Spec.Id).ToList().ForEach(i => ourGroup.Value.Remove(i));
                 }
             }
 
@@ -158,14 +161,7 @@ namespace Numerge
         
         public void ReplaceDeps(string from, LoadedPackage to)
         {
-            foreach (var group in Spec.Dependencies)
-            {
-                for (var c = 0; c < group.Value.Count; c++)
-                {
-                    if (group.Value[c].Id == from)
-                        group.Value[c] = new BinaryDependency(group.Value[c], to);
-                }
-            }
+            Spec.Dependencies.Replace(from, to);
         }
 
         public void Save(Stream stream)
@@ -197,14 +193,14 @@ namespace Numerge
 
     class LoadedNuspec
     {
-        private readonly byte[] _data;
-        public string Id { get; set; }
-        public string Version { get; set; }
-        private string _xmlns;
+        readonly byte[] _data;
+        public string Id { get; }
+        public string Version { get; }
+        readonly string _xmlns;
         
         public XName NugetName(string name) => XName.Get(name, _xmlns);
         
-        public Dictionary<string, List<IDependency>> Dependencies { get; } = new Dictionary<string, List<IDependency>>();
+        public Dependencies Dependencies { get; } = new Dependencies();
 
         public LoadedNuspec(byte[] data)
         {
@@ -217,7 +213,7 @@ namespace Numerge
             foreach (var group in deps.Elements(NugetName("group")))
             {
                 var tfm = group.Attribute("targetFramework").Value;
-                var groupList = Dependencies[tfm] = new List<IDependency>();
+                var groupList = Dependencies[tfm] = new DependencyGroup();
                 foreach (var dep in group.Elements())
                     groupList.Add(new ExternalDependency(dep));
             }
@@ -229,7 +225,6 @@ namespace Numerge
 
         public byte[] Serialize()
         {
-            RemoveDuplicates();
             RemoveSelfDependency();
             var doc = XDocument.Load(new MemoryStream(_data));
             var deps = doc.Root.Descendants(NugetName("dependencies")).First();
@@ -247,30 +242,103 @@ namespace Numerge
             return ms.ToArray();
         }
 
-        public void RemoveSelfDependency()
+        public void RemoveSelfDependency() => Dependencies.RemoveDependency(Id);
+    }
+
+    class Dependencies : Dictionary<string, DependencyGroup>
+    {
+        public DependencyGroup GetOrCreateGroup(string tfm)
         {
-            foreach(var group in Dependencies)
-                foreach(var d in group.Value.ToList())
-                    if (d.Id == Id)
-                        group.Value.Remove(d);
+            if (!TryGetValue(tfm, out var grp))
+                grp = this[tfm] = new DependencyGroup();
+            return grp;
+        }
+        
+        public void Add(string tfm, IDependency dependency)
+        {
+            GetOrCreateGroup(tfm).Add(dependency);
         }
 
-        public void RemoveDuplicates()
+        public void Replace(string what, LoadedPackage with)
         {
-            foreach (var group in Dependencies)
-            {
-                var hs = new HashSet<string>();
-                foreach(var dep in group.Value.ToList())
-                    if (!hs.Add(dep.Id))
-                        group.Value.Remove(dep);
-            }
+            foreach (var g in Values)
+                g.Replace(what, with);
+        }
+
+        public void RemoveDependency(string id)
+        {
+            foreach (var g in Values)
+                g.Remove(id);
         }
     }
 
+    class DependencyGroup : IEnumerable<IDependency>
+    {
+        List<IDependency> _list = new List<IDependency>();
+        public IEnumerator<IDependency> GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)_list).GetEnumerator();
+        }
+
+        static string MergeExcludes(string first, string second)
+        {
+            var sl = (first ?? "").Split(',');
+            var s2 = (second ?? "").Split(',');
+            var a = sl.Where(e => s2.Contains(e)).ToArray();
+            if (a.Length == 0)
+                return null;
+            return string.Join(',', a);
+        }
+        
+        public void Add(IDependency dependency)
+        {
+            for (var c = 0; c < _list.Count; c++)
+            {
+                var d = _list[c];
+                if (d.Id == dependency.Id)
+                { 
+                    var target = d is BinaryDependency ? d : dependency is BinaryDependency ? dependency : d;
+                    target.ExcludeAssets = MergeExcludes(d.ExcludeAssets, dependency.ExcludeAssets);
+                    _list[c] = target;
+                    return;
+                }
+            }
+            _list.Add(dependency);
+        }
+
+        public void AddRange(IEnumerable<IDependency> deps)
+        {
+            foreach (var d in deps)
+                Add(d);
+        }
+
+        public void Replace(string what, LoadedPackage package)
+        {
+            var dep = _list.FirstOrDefault(d => d.Id == what);
+            if (dep == null)
+                return;
+            var newDep = new BinaryDependency(dep, package);
+            _list.Remove(dep);
+            Add(newDep);
+        }
+
+        public void Remove(string id)
+        {
+            var dep = _list.FirstOrDefault(d => d.Id == id);
+            if (dep != null)
+                _list.Remove(dep);
+        }
+    }
+    
     interface IDependency
     {
         string Id { get; }
-        string ExcludeAssets { get; }
+        string ExcludeAssets { get; set; }
         XElement Serialize(string xmlna);
     }
 
@@ -286,10 +354,15 @@ namespace Numerge
         }
 
         public string Id { get; }
-        public string ExcludeAssets { get; }
+        public string ExcludeAssets { get; set; }
         public XElement Serialize(string xmlns)
         {
             var rv = XElement.Load(_el.CreateReader());
+            if (!string.IsNullOrWhiteSpace(ExcludeAssets))
+                rv.SetAttributeValue("exclude", ExcludeAssets);
+            else
+                rv.Attribute("exclude")?.Remove();
+            
             foreach (var e in rv.DescendantsAndSelf())
             {
                 e.Name = XName.Get(rv.Name.LocalName, xmlns);
@@ -321,7 +394,8 @@ namespace Numerge
             var rv = new XElement(XName.Get("dependency", xmlns));
             rv.SetAttributeValue("id", Id);
             rv.SetAttributeValue("version", Package.Spec.Version);
-            rv.SetAttributeValue("exclude", ExcludeAssets);
+            if (!string.IsNullOrWhiteSpace(ExcludeAssets))
+                rv.SetAttributeValue("exclude", ExcludeAssets);
             return rv;
         }
     }
