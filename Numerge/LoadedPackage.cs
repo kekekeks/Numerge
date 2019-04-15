@@ -412,13 +412,16 @@ namespace Numerge
 
         public byte[] Serialize()
         {
-            var doc = new XDocument(new XDeclaration("1.0", "utf-8", ""),
-                new XElement(ContentTypesName("Types")));
+            var types = new XElement(ContentTypesName("Types"));
+            var doc = new XDocument(new XDeclaration("1.0", "utf-8", ""), types);
+
             foreach (var kp in this)
             {
                 var el = new XElement(ContentTypesName("Default"));
                 el.SetAttributeValue("Extension", kp.Key);
                 el.SetAttributeValue("ContentType", kp.Value);
+
+                types.Add(el);
             }
             var ms = new MemoryStream();
             doc.Save(ms);
