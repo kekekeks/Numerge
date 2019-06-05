@@ -292,7 +292,7 @@ namespace Numerge
             var a = sl.Where(e => s2.Contains(e)).ToArray();
             if (a.Length == 0)
                 return null;
-            return string.Join(',', a);
+            return string.Join(",", a);
         }
         
         public void Add(IDependency dependency)
