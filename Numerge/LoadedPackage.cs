@@ -313,7 +313,7 @@ namespace Numerge
 
         public void AddRange(IEnumerable<IDependency> deps)
         {
-            foreach (var d in deps.ToList())
+            foreach (var d in deps)
                 Add(d);
         }
 
