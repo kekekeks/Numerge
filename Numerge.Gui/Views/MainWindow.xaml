@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Numerge.Gui.ViewModels;assembly=Numerge.Gui"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Numerge.Gui.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Numerge.Gui">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+    <Window.Styles>
+        <Style Selector="TextBlock.path">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Background" Value="{DynamicResource DeepPurpleLighten5Brush}" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="5" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Margin" Value="5" />
+        </Style>
+    </Window.Styles>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Column="0" Classes="path" Grid.Row="0" Text="{Binding PathToConfig}" />
+        <Button Grid.Column="1" Grid.Row="0" Content="Set Path" Command="{Binding SetConfig}" />
+        <TextBlock Grid.Column="0" Classes="path" Grid.Row="1" Text="{Binding PathToDirWithPack}" />
+        <Button Grid.Column="1" Grid.Row="1" Content="Set Path" Command="{Binding SetPckgDir}" />
+        <TextBlock Grid.Column="0" Classes="path" Grid.Row="2" Text="{Binding PathToOutputDir}" />
+        <Button Grid.Column="1" Grid.Row="2" Content="Set Path" Command="{Binding SetResDir}" />
+        <TextBox Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" IsReadOnly="True" Text="{Binding ConfContent}" />
+        <Button Grid.Column="1" Grid.Row="4" Content="Run" Command="{Binding RunMergeCommand}" />
+    </Grid>
+</Window>
