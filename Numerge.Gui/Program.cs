@@ -24,11 +24,5 @@ namespace Numerge.Gui
 
         // Your application's entry point. Here you can initialize your MVVM framework, DI
         // container, etc.
-        private static void AppMain(Application app, string[] args)
-        {
-           
-
-           
-        }
     }
 }

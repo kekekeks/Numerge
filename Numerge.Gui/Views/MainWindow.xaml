@@ -7,10 +7,6 @@
         x:Class="Numerge.Gui.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="Numerge.Gui">
-
-    <Design.DataContext>
-        <vm:MainWindowViewModel />
-    </Design.DataContext>
     <Window.Styles>
         <Style Selector="TextBlock.path">
             <Setter Property="Margin" Value="5" />
@@ -35,7 +31,6 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-
         <TextBlock Grid.Column="0" Classes="path" Grid.Row="0" Text="{Binding PathToConfig}" />
         <Button Grid.Column="1" Grid.Row="0" Content="Set Path" Command="{Binding SetConfig}" />
         <TextBlock Grid.Column="0" Classes="path" Grid.Row="1" Text="{Binding PathToDirWithPack}" />
