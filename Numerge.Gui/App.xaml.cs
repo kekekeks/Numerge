@@ -16,8 +16,6 @@ namespace Numerge.Gui
         }
         public override void OnFrameworkInitializationCompleted()
         {
-            var suspension = new AutoSuspendHelper(ApplicationLifetime);
-            suspension.OnFrameworkInitializationCompleted();
             var mainWindowViewModel = new MainWindowViewModel();
             var window = new MainWindow();
             mainWindowViewModel.Window = window;
