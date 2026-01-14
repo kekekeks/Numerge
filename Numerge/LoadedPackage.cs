@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -208,17 +207,20 @@ namespace Numerge
             _data = data;
             var doc = XDocument.Load(new MemoryStream(data));
             _xmlns = doc.Root.Name.Namespace.ToString();
-            
-            var deps = doc.Root.Descendants(NugetName("dependencies")).First();
-            foreach (var group in deps.Elements(NugetName("group")))
+            var metadata = doc.Root.Element(NugetName("metadata"));
+            var deps = metadata.Element(NugetName("dependencies"));
+
+            if (deps != null)
             {
-                var tfm = group.Attribute("targetFramework").Value;
-                var groupList = Dependencies[tfm] = new DependencyGroup();
-                foreach (var dep in group.Elements())
-                    groupList.Add(new ExternalDependency(dep));
+                foreach (var group in deps.Elements(NugetName("group")))
+                {
+                    var tfm = group.Attribute("targetFramework").Value;
+                    var groupList = Dependencies[tfm] = new DependencyGroup();
+                    foreach (var dep in group.Elements())
+                        groupList.Add(new ExternalDependency(dep));
+                }
             }
 
-            var metadata = doc.Root.Element(NugetName("metadata"));
             Id = metadata.Element(NugetName("id")).Value;
             Version = metadata.Element(NugetName("version")).Value;
         }
@@ -227,8 +229,17 @@ namespace Numerge
         {
             RemoveSelfDependency();
             var doc = XDocument.Load(new MemoryStream(_data));
-            var deps = doc.Root.Descendants(NugetName("dependencies")).First();
-            deps.RemoveAll();
+            var metadata = doc.Root.Element(NugetName("metadata"));
+            var deps = metadata.Element(NugetName("dependencies"));
+
+            if (deps != null)
+                deps.RemoveAll();
+            else if (Dependencies.Count > 0)
+            {
+                deps = new XElement(NugetName("dependencies"));
+                metadata.Add(deps);
+            }
+
             foreach (var group in Dependencies)
             {
                 var el = new XElement(NugetName("group"));
