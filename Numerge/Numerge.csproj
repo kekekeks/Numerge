@@ -2,7 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
+
+    <PackageId>Numerge</PackageId>
+    <Description>A tool for merging NuGet packages</Description>
+    <PackageLicenseFile>license.md</PackageLicenseFile>
+    <Authors>kekekeks</Authors>
+    <RepositoryUrl>https://github.com/kekekeks/Numerge</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../license.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
 </Project>
