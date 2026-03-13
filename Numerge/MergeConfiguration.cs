@@ -10,7 +10,7 @@ namespace Numerge
     public class MergeConfiguration
     {
         [DataMember]
-        public List<PackageContfiguration> Packages { get; set; }
+        public List<PackageConfiguration> Packages { get; set; }
         
         public static MergeConfiguration Load(Stream s)
         {
@@ -29,7 +29,7 @@ namespace Numerge
     }
 
     [DataContract]
-    public class PackageContfiguration
+    public class PackageConfiguration
     {
         [DataMember]
         public string Id { get; set; }
