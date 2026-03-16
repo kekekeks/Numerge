@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <Nullable>enable</Nullable>
+
+        <GenerateDependencyFile>true</GenerateDependencyFile>
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+        <PackageId>Numerge.MSBuild</PackageId>
+        <Title>Numerge.MSBuild</Title>
+        <IsPackable>true</IsPackable>
+        <Version>0.1.10</Version>
+        <Authors>kekekekz, SKProCH</Authors>
+        <Description>Provides the numerge capabilities in MSBuild task form</Description>
+        <PackageProjectUrl>https://github.com/AvaloniaUtils/Numerge</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/AvaloniaUtils/Numerge/blob/master/license.md</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/AvaloniaUtils/Numerge</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReleaseNotes>Fix cannot access the file being used by another process</PackageReleaseNotes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Numerge\Numerge.csproj"
+                          PrivateAssets="all"/>
+        
+        <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.10.4"
+                          PrivateAssets="all" ExcludeAssets="runtime"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- these lines pack the build props/targets files to the `build` folder in the generated package.
+            by convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
+            for automatic inclusion in the build. -->
+        <None Include="Numerge.MSBuild.props" PackagePath="build;buildCrossTargeting" Pack="true" />
+        <None Include="Numerge.MSBuild.targets" PackagePath="build;buildCrossTargeting" Pack="true" />
+    </ItemGroup>
+
+    <!-- This target adds the generated deps.json file to our package output -->
+    <Target
+            Name="AddBuildDependencyFileToBuiltProjectOutputGroupOutput"
+            BeforeTargets="BuiltProjectOutputGroup"
+            Condition=" '$(GenerateDependencyFile)' == 'true'">
+
+        <ItemGroup>
+            <BuiltProjectOutputGroupOutput
+                    Include="$(ProjectDepsFilePath)"
+                    TargetPath="$(ProjectDepsFileName)"
+                    FinalOutputPath="$(ProjectDepsFilePath)"/>
+        </ItemGroup>
+    </Target>
+
+    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+        <ItemGroup>
+            <!-- Filter out unnecessary files -->
+            <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+        </ItemGroup>
+
+        <!-- Print batches for debug purposes -->
+        <Message Text="Batch for .nupkg: ReferenceCopyLocalPaths = @(_ReferenceCopyLocalPaths), ReferenceCopyLocalPaths.DestinationSubDirectory = %(_ReferenceCopyLocalPaths.DestinationSubDirectory) Filename = %(_ReferenceCopyLocalPaths.Filename) Extension = %(_ReferenceCopyLocalPaths.Extension)" Importance="High" Condition="'@(_ReferenceCopyLocalPaths)' != ''" />
+
+        <ItemGroup>
+            <!-- Add file to package with consideration of sub folder. If empty, the root folder is chosen. -->
+            <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+        </ItemGroup>
+    </Target>
+</Project>

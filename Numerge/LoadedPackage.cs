@@ -46,9 +46,20 @@ namespace Numerge
             BinaryContents.Remove(ContentTypesFileName);
         }
 
-        public LoadedPackage(string path) : this(Path.GetFileName(path), File.ReadAllBytes(path))
+        public LoadedPackage(string path) : this(Path.GetFileName(path), ReadAllBytes(path))
         {
             
+        }
+
+        public static byte[] ReadAllBytes(string path)
+        {
+            using (var fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var binaryReader = new BinaryReader(fileStream))
+                {
+                    return binaryReader.ReadBytes((int)fileStream.Length); 
+                }
+            }
         }
 
         public void ResolveBinaryDependencies(Dictionary<string, LoadedPackage> pkgs)

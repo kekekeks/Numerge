@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Numerge", "Numerge\Numerge.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Numerge.Console", "Numerge.Console\Numerge.Console.csproj", "{D38DEBD2-B6CE-45A8-8DCA-8E5AA39FF42D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Numerge.MSBuild", "Numerge.MSBuild\Numerge.MSBuild.csproj", "{311467CB-6871-48CA-BD21-6F4E1DAFC5BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{D38DEBD2-B6CE-45A8-8DCA-8E5AA39FF42D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D38DEBD2-B6CE-45A8-8DCA-8E5AA39FF42D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D38DEBD2-B6CE-45A8-8DCA-8E5AA39FF42D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{311467CB-6871-48CA-BD21-6F4E1DAFC5BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{311467CB-6871-48CA-BD21-6F4E1DAFC5BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{311467CB-6871-48CA-BD21-6F4E1DAFC5BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{311467CB-6871-48CA-BD21-6F4E1DAFC5BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

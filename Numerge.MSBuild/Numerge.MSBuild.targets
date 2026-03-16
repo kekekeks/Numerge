@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <_Numerge_MSBuild_TaskFolder>$(MSBuildThisFileDirectory)..\lib\netstandard2.0</_Numerge_MSBuild_TaskFolder>
+        <_Numerge_MSBuild_TaskDll>$(_Numerge_MSBuild_TaskFolder)\$(MSBuildThisFileName).dll</_Numerge_MSBuild_TaskDll>
+        <_Numerge_MSBuild_ProjectDirectory Condition="'$(_Numerge_MSBuild_ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</_Numerge_MSBuild_ProjectDirectory>
+    </PropertyGroup>
+
+    <!--Register our custom task-->
+    <UsingTask TaskName="$(MSBuildThisFileName).NumergeTask" AssemblyFile="$(_Numerge_MSBuild_TaskDll)"/>
+    
+    <Target Name="Numerge" AfterTargets="Pack">
+        <NumergeTask PackageVersion="$(PackageVersion)" Configuration="$(Configuration)"
+                     ClearIntermediatePackages="$(NumergeClearIntermediatePackages)" ConfigFile="$(NumergeConfigFile)"
+                     ProjectDirectory="$(_Numerge_MSBuild_ProjectDirectory)"/>
+    </Target>
+</Project>
